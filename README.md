@@ -6,9 +6,11 @@ Front) react, nextjs, socket.io, typescript : 황현수
 
 Server) redis, java, netty, socket.io : 오수빈
 
- 
 
-기초 시나리오 )
+### 서버 라이브러리
+socker.io: https://github.com/mrniko/netty-socketio/tree/netty-socketio-2.0.6
+
+### 기초 시나리오 
 
 유저가 페이지 접근
 
