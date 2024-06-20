@@ -20,6 +20,6 @@ socket.io를 이용해 서버와 커넥션 생성.
 
 클라이언트에서 표시되는 현재 페이지 유저수 업데이트.
 
-
+![socket-project-scenario](https://github.com/ohsoou/socket-spring-project/assets/64073715/5352aad9-4f9b-4a25-85e8-5a292e28a951)
  
 
