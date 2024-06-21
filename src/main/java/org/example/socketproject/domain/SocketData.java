@@ -1,14 +1,14 @@
-package org.example.socketproject.model;
+package org.example.socketproject.domain;
 
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
-import java.util.Set;
+import java.util.List;
 
 @Getter
-@RedisHash(value = "socket")
+@RedisHash(value = "visitor")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,9 +17,5 @@ import java.util.Set;
 public class SocketData {
     @Id
     private String id;
-//    private String namespace;
-//    private String room;
-//
-//    private String userKey;
-    private Set<String> userKeys;
+    private List<String> userKeys;
 }

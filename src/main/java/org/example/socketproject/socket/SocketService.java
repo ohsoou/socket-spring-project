@@ -1,17 +1,16 @@
 package org.example.socketproject.socket;
 
+import com.corundumstudio.socketio.ClientOperations;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIONamespace;
+import com.corundumstudio.socketio.SocketIOServer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.socketproject.enums.MessageType;
-import org.example.socketproject.model.Message;
-import org.example.socketproject.model.SocketData;
-import org.example.socketproject.model.SocketEventData;
+import org.example.socketproject.domain.SocketData;
 import org.example.socketproject.service.MonitoringService;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -19,50 +18,60 @@ import java.util.Set;
 public class SocketService {
     private final MonitoringService monitoringService;
 
-    public void sendMessage(String eventName, SocketIOClient senderClient, String message ) {
-        for(SocketIOClient client : senderClient.getNamespace().getAllClients()) {
-            if(!client.getSessionId().equals(senderClient.getSessionId())) {
-                client.sendEvent(eventName, new Message(MessageType.SERVER, message));
-            }
-        }
-    }
+    public void addViewer(String eventName, SocketIOClient client) {
+        // namespace
+        SocketIONamespace namespace = client.getNamespace();
+        // room
+        String room = client.getHandshakeData().getSingleUrlParam("room");
+        client.joinRoom(room);
+        // user
+        String userId = client.get("userKey");
 
-    public void addViewer(SocketEventData socketEventData) {
-        SocketIONamespace namespace = socketEventData.getSenderClient().getNamespace();
-        String userId = socketEventData.getUserKey();
-        String id = String.join(":", namespace.getName(), socketEventData.getRoom());
-        Set<String> viewers = monitoringService.getViewers(id);
+        String redisKey = String.join(":", namespace.getName(), room);
+
+        List<String> viewers = monitoringService.getViewers(redisKey);
         viewers.add(userId);
-        log.info(">> add:: currentViewers: {}", viewers.toArray());
+
         log.info(">> add:: saveViewer: {}: {}", namespace.getName(), userId);
         int count = monitoringService.saveViewerData(
                 SocketData.builder()
-                        .id(id)
+                        .id(redisKey)
                         .userKeys(viewers).build()
         );
 
         namespace
-                .getRoomOperations(socketEventData.getRoom())
-                .sendEvent(socketEventData.getEventName(), String.valueOf(count));
+                .getRoomOperations(room)
+                .sendEvent(eventName, String.valueOf(count));
     }
 
-    public void removeViewer(SocketEventData socketEventData) {
-        SocketIONamespace namespace = socketEventData.getSenderClient().getNamespace();
-        String userId = socketEventData.getUserKey();
-        String id = String.join(":", namespace.getName(), socketEventData.getRoom());
+    public void removeViewer(String eventName, SocketIOClient client) {
+        // namespace
+        SocketIONamespace namespace = client.getNamespace();
+        // room
+        String room = client.get("room");
+        client.leaveRoom(room);
+        // user
+        String userId = client.get("userKey");
 
-        Set<String> viewers = monitoringService.getViewers(id);
+        String redisKey = String.join(":", namespace.getName(), room);
+
+        List<String> viewers = monitoringService.getViewers(redisKey);
         viewers.remove(userId);
-        log.info(">> remove:: currentViewers: {}", viewers.toArray());
 
         log.info(">> remove:: removeViewer: {}: {}", namespace.getName(), userId);
         int count = monitoringService.saveViewerData(
                 SocketData.builder()
-                        .id(id)
+                        .id(redisKey)
                         .userKeys(viewers).build());
 
         namespace
-                .getRoomOperations(socketEventData.getRoom())
-                .sendEvent(socketEventData.getEventName(), String.valueOf(count));
+                .getRoomOperations(room)
+                .sendEvent(eventName, String.valueOf(count));
+    }
+
+    public void initSocket(SocketIOServer server) {
+        monitoringService.initRedisViewer();
+        server.getAllClients().forEach(ClientOperations::disconnect);
+
     }
 }
