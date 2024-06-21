@@ -22,7 +22,7 @@ configurations {
 repositories {
     mavenCentral()
 }
-val socketIoVersion = "2.0.3"
+val socketIoVersion = "2.0.9"
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
