@@ -6,11 +6,9 @@ import com.corundumstudio.socketio.SocketIONamespace;
 import com.corundumstudio.socketio.SocketIOServer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.socketproject.domain.SocketData;
+import org.example.socketproject.model.SocketData;
 import org.example.socketproject.service.MonitoringService;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @Slf4j
@@ -25,19 +23,14 @@ public class SocketService {
         String room = client.getHandshakeData().getSingleUrlParam("room");
         client.joinRoom(room);
         // user
-        String userId = client.get("userKey");
+        String userKey = client.get("userKey");
 
         String redisKey = String.join(":", namespace.getName(), room);
+        SocketData socketData = SocketData.builder().namespace(redisKey).socketId(client.getSessionId().toString()).userKey(userKey).build();
 
-        List<String> viewers = monitoringService.getViewers(redisKey);
-        viewers.add(userId);
-
-        log.info(">> add:: saveViewer: {}: {}", namespace.getName(), userId);
-        int count = monitoringService.saveViewerData(
-                SocketData.builder()
-                        .id(redisKey)
-                        .userKeys(viewers).build()
-        );
+        log.info(">> add:: saveViewer: {}: {}", namespace.getName(), userKey);
+        monitoringService.saveViewerData(socketData);
+        int count = monitoringService.getRealViewers(socketData);
 
         namespace
                 .getRoomOperations(room)
@@ -51,19 +44,18 @@ public class SocketService {
         String room = client.get("room");
         client.leaveRoom(room);
         // user
-        String userId = client.get("userKey");
+        String userKey = client.get("userKey");
 
         String redisKey = String.join(":", namespace.getName(), room);
+        SocketData socketData = SocketData.builder().namespace(redisKey).socketId(client.getSessionId().toString()).userKey(userKey).build();
 
-        List<String> viewers = monitoringService.getViewers(redisKey);
-        viewers.remove(userId);
 
-        log.info(">> remove:: removeViewer: {}: {}", namespace.getName(), userId);
-        int count = monitoringService.saveViewerData(
-                SocketData.builder()
-                        .id(redisKey)
-                        .userKeys(viewers).build());
+        log.info(">> remove:: removeViewer: {}: {}", namespace.getName(), userKey);
+        monitoringService.deleteViewerData(socketData);
+        int count = monitoringService.getRealViewers(socketData);
 
+
+        // Message to Client
         namespace
                 .getRoomOperations(room)
                 .sendEvent(eventName, String.valueOf(count));

@@ -2,11 +2,12 @@ package org.example.socketproject.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.socketproject.domain.SocketData;
+import org.example.socketproject.model.SocketData;
 import org.example.socketproject.repository.MonitoringRedisRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -14,19 +15,22 @@ import java.util.*;
 public class MonitoringService {
     private final MonitoringRedisRepository redisRepository;
 
-    public List<String> getViewers(String id) {
-        SocketData redisData = redisRepository.findById(id).orElse(SocketData.builder().build());
+    public int getRealViewers(SocketData socketData) {
+        Iterable<SocketData> findData = redisRepository.findAllByNamespace(socketData.getNamespace());
+        Set<String> userKeys = new HashSet<>();
 
-        return Optional.ofNullable(redisData.getUserKeys()).orElse(new ArrayList<>());
+        findData.forEach(data -> userKeys.add(data.getUserKey()));
+
+        return userKeys.size();
     }
 
 
-    public int saveViewerData(SocketData socketData) {
+    public void saveViewerData(SocketData socketData) {
         redisRepository.save(socketData);
+    }
 
-        Set<String> viewers = Set.copyOf(getViewers(socketData.getId()));
-        log.info("viewer count: {}", viewers.size());
-        return viewers.size();
+    public void deleteViewerData(SocketData socketData) {
+        redisRepository.deleteById(socketData.getSocketId());
     }
 
     public void initRedisViewer() {
