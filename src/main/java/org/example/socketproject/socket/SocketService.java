@@ -6,6 +6,7 @@ import com.corundumstudio.socketio.SocketIONamespace;
 import com.corundumstudio.socketio.SocketIOServer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.socketproject.constants.SocketStoreKey;
 import org.example.socketproject.model.SocketData;
 import org.example.socketproject.service.MonitoringService;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,10 @@ public class SocketService {
         // namespace
         SocketIONamespace namespace = client.getNamespace();
         // room
-        String room = client.getHandshakeData().getSingleUrlParam("room");
+        String room = client.getHandshakeData().getSingleUrlParam(SocketStoreKey.ROOM);
         client.joinRoom(room);
         // user
-        String userKey = client.get("userKey");
+        String userKey = client.get(SocketStoreKey.USER_KEY);
 
         String redisKey = String.join(":", namespace.getName(), room);
         SocketData socketData = SocketData.builder().namespace(redisKey).socketId(client.getSessionId().toString()).userKey(userKey).build();
@@ -41,10 +42,10 @@ public class SocketService {
         // namespace
         SocketIONamespace namespace = client.getNamespace();
         // room
-        String room = client.get("room");
+        String room = client.get(SocketStoreKey.ROOM);
         client.leaveRoom(room);
         // user
-        String userKey = client.get("userKey");
+        String userKey = client.get(SocketStoreKey.USER_KEY);
 
         String redisKey = String.join(":", namespace.getName(), room);
         SocketData socketData = SocketData.builder().namespace(redisKey).socketId(client.getSessionId().toString()).userKey(userKey).build();

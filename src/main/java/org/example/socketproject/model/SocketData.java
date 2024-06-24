@@ -20,4 +20,7 @@ public class SocketData {
 
     private String userKey;
 
+    public boolean existSocketInNamespace(String namespace) {
+        return this.namespace.equals(namespace);
+    }
 }
