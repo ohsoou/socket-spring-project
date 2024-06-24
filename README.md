@@ -26,6 +26,7 @@ socket.io를 이용해 서버와 Connect
 
 클라이언트에서 표시되는 현재 페이지 유저수 업데이트.
 
-![socket-project-scenario](https://github.com/ohsoou/socket-spring-project/assets/64073715/5352aad9-4f9b-4a25-85e8-5a292e28a951)
+![socket-project-scenario-2](https://github.com/ohsoou/socket-spring-project/assets/64073715/8470548c-05d3-4c16-8574-132258c49d39)
+
  
 
